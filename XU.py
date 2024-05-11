@@ -25,7 +25,6 @@ pd.set_option('display.width', 500)
 ###########################################################
 # MODELLEME #
 ###########################################################
-from sklearn.preprocessing import StandardScaler
 
 
 
@@ -40,16 +39,6 @@ def dataf_for_prophet(dataframe, y):
 
 df = dataf_for_prophet(vs.df_clean, ("KCHOL.IS", "Close"))
 
-df.drop("ds", axis=1, inplace=True)
-
-
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(df)
-
-dfss = pd.DataFrame(scaled_data, columns=df.columns)
-dfss["ds"] = df.index
-df["ds"] = df.index
-
 
 # EN İYİ ÇAPRAZ DOĞRULAMA DEĞERLERİNİ BULMA #
 
@@ -59,28 +48,28 @@ def objective0(params):
     horizon = params['horizon']
 
     model0 = Prophet()
-    model0.fit(dfss)
+    model0.fit(df)
     df_cv0 = cross_validation(model0, initial=initial, period=period, horizon=horizon)
     df_p0 = performance_metrics(df_cv0)
     return -df_p0['rmse'].values[0]  # Çapraz doğrulama performansını maksimize et
 
 
 hyper_iph = {
-    'initial': hp.choice('initial', ["15 days", "30 days", "45 days", '90 days', '180 days',
+    'initial': hp.choice('initial', ["45 days", '90 days', '180 days',
                                      '365 days', '730 days', '1095 days']),
     'period': hp.choice('period', ['45 days', '90 days', '180 days',
                                    '365 days', '730 days', '1095 days']),
     'horizon': hp.choice('horizon', ['45 days', '90 days',
-                                     '180 days', '365 days', '730 days', '1095 days'])
+                                     '180 days', '365 days', '730 days'])
 }
 
 trials0 = Trials()
 last_iph = fmin(objective0, hyper_iph, algo=tpe.suggest, max_evals=10, trials=trials0)
 
 best_iph = {
-    'initial': ["15 days", "30 days", '45 days', '90 days', '180 days', '365 days', '730 days', '1095 days',][last_iph['initial']],
+    'initial': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days',][last_iph['initial']],
     'period': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days'][last_iph['period']],
-    'horizon': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days'][last_iph['horizon']]
+    'horizon': ['45 days', '90 days', '180 days', '365 days', '730 days'][last_iph['horizon']]
 }
 
 print(best_iph)
@@ -90,7 +79,7 @@ print(best_iph)
 
 def objective1(params):
     model1 = Prophet(**params)
-    model1.fit(dfss)  # Modeli eğitelim
+    model1.fit(df)  # Modeli eğitelim
     df_cv1 = cross_validation(model1, initial=best_iph["initial"], period=best_iph["period"],
                               horizon=best_iph["horizon"])
     df_p1 = performance_metrics(df_cv1)
@@ -117,12 +106,11 @@ print(best)
 ###########################################################
 
 model_best = Prophet(**best)
-model_best.fit(dfss)
+model_best.fit(df)
+
 
 future = model_best.make_future_dataframe(periods=730)
 predicts = model_best.predict(future)
-predicts0 = predicts.drop(columns="ds")
-predicts01 = scaler.inverse_transform(predicts0["yhat"])
 
 
 # SKORLAMA #
@@ -165,7 +153,7 @@ fig.add_trace(go.Scatter(x=predicts['ds'].iloc[-730:], y=predicts['yhat'].iloc[-
 fig.update_layout(title='Prophet Tahminleri', xaxis_title='Tarih', yaxis_title='Değer')
 
 # Grafiği HTML dosyası olarak kaydet
-fig.write_html("prophet_tahminleri_ss.html")
+fig.write_html("prophet_tahminleri.html")
 
 
 
