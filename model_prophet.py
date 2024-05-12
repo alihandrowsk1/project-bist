@@ -155,6 +155,7 @@ fig.update_layout(title='Prophet Tahminleri', xaxis_title='Tarih', yaxis_title='
 # Grafiği HTML dosyası olarak kaydet
 fig.write_html("prophet_tahminleri.html")
 
+#123
 
 
 
