@@ -126,32 +126,28 @@ print("RMSE:", rmse)
 
 
 ###########################################################
-# ÖZELLİK ÖNEMİ #
+# GÖRSELLEŞTİRME #
 ###########################################################
+
+# TREND GRAFİĞİ #
 
 model_best.plot_components(predicts)
 plt.show()
 
-###########################################################
-# GÖRSELLEŞTİRME #
-###########################################################
 
-# Tahminlenen kısmı gerçek değerlerden farklı olarak görselleştir
+
+# EN İYİ MODEL GRAFİĞİ #
+
 fig = go.Figure()
 
-# Gerçek verileri ekle
 fig.add_trace(go.Scatter(x=df.index, y=df['y'], mode='lines', name='Gerçek Veriler'))
 
-# Tahminleri ekle
 fig.add_trace(go.Scatter(x=predicts['ds'], y=predicts['yhat'], mode='lines', name='Tahminlenen Veriler'))
 
-# İleriye dönük tahminleri vurgula
 fig.add_trace(go.Scatter(x=predicts['ds'].iloc[-730:], y=predicts['yhat'].iloc[-730:], mode='lines', fill='tozeroy', fillcolor='rgba(0, 0, 255, 0.3)', name='İleriye Dönük Tahminler'))
 
-# Grafik düzenleme
 fig.update_layout(title='Prophet Tahminleri', xaxis_title='Tarih', yaxis_title='Değer')
 
-# Grafiği HTML dosyası olarak kaydet
 fig.write_html("prophet_tahminleri.html")
 
 
