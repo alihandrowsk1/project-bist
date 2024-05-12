@@ -27,7 +27,6 @@ pd.set_option('display.width', 500)
 ###########################################################
 
 
-
 def dataf_for_prophet(dataframe, y):
     dataframe["ds"] = dataframe.index
     dataframe["y"] = dataframe[y]
@@ -95,7 +94,7 @@ hyperparam_space = {
 
 trials1 = Trials()
 best = fmin(objective1, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials1)
-best['seasonality_mode'] = "additive" if best['seasonality_mode'] == 0 else "multiplicative"
+best["seasonality_mode"] = "additive"
 
 print(best)
 
@@ -155,7 +154,7 @@ fig.update_layout(title='Prophet Tahminleri', xaxis_title='Tarih', yaxis_title='
 # Grafiği HTML dosyası olarak kaydet
 fig.write_html("prophet_tahminleri.html")
 
-#123
+
 
 
 
