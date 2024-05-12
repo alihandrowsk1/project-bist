@@ -107,7 +107,7 @@ data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
 data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
 data = pd.concat([data, daily_takas], axis=1)
 
-df_clean = data.dropna(subset=[("KCHOL.IS", "Close")])
+df_clean = data.dropna(subset=[("XU100.IS", "Close")])
 
 df_clean.fillna(method="ffill", inplace=True)
 df_clean.fillna(method="bfill", inplace=True)

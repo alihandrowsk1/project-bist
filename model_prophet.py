@@ -4,7 +4,6 @@
 
 import warnings
 import pandas as pd
-from datetime import datetime
 from prophet import Prophet
 from prophet.diagnostics import cross_validation
 from prophet.diagnostics import performance_metrics
