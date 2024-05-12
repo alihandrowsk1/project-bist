@@ -20,7 +20,7 @@ Tahminlenmek istenilen hisseyi **veri_seti** dosyasında mevcut hisse değeri il
 ## Katkıda Bulunma
 
 ```markdown
-Lütfen katkıda bulunmadan önce mevcut açık konuları (issues) kontrol edin. Ayrıca, yeni bir özelliği geliştirmek için önceden tartışma başlatmanızı önerilir.
+Lütfen katkıda bulunmadan önce mevcut açık konuları (issues) kontrol edin. Ayrıca, yeni bir özelliği geliştirmek için önceden tartışma başlatmanızı öneririm.
 ```
 
 ## Lisans
