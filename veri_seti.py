@@ -17,7 +17,7 @@ pd.set_option('display.width', 500)
 # VERİ SETİ OLUŞTURMA #
 ###########################################################
 
-# EVDS API ANAHTARI
+# EVDS API ANAHTARI #
 key = "R0tm8EWAmS"
 evds = e.evdsAPI(key)
 
@@ -83,11 +83,12 @@ repo.rename(columns={"TP_AOFOBAP": "REPO"}, inplace=True)
 
 # YABANCI, YERLİ TAKAS VERİSİ #
 
-"""
-AYLIĞA ÇEVRİLİP VERİ SETİNE EKLENECEK
-"""
-
 takas = pd.read_excel("ALL_INVESTOR.xlsx", index_col="TARIH")
+
+daily_takas = takas.resample('D').asfreq()
+daily_takas = daily_takas[:-1]
+daily_takas = daily_takas.interpolate(method='linear')
+daily_takas.columns = pd.MultiIndex.from_tuples([('TAKAS', col) for col in daily_takas.columns])
 
 
 # HİSSE, BİST100 VB. BORSA VERİLERİ #
@@ -104,12 +105,27 @@ data = yf.download(stocks, start="2018-01-01", end="2024-01-01", group_by="ticke
 data[("OTHER_VALUES", "EXCHANGE_BASKET")] = exc["KUR_SEPETİ"].values
 data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
 data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
+data = pd.concat([data, daily_takas], axis=1)
 
 df_clean = data.dropna(subset=[("KCHOL.IS", "Close")])
 
 df_clean.fillna(method="ffill", inplace=True)
 df_clean.fillna(method="bfill", inplace=True)
 
+
+# BAĞIMLI DEĞİŞKENİN GECİKMELİ DEĞERLERİ #
+
 for i in range(1, 8):
     yeni_sutun = f"LAG_{i}"
     df_clean[("LAGS", yeni_sutun)] = df_clean[("KCHOL.IS", "Close")].shift(i)
+
+
+###########################################################
+# KEŞİFÇİ VERİ ANALİZİ #
+###########################################################
+
+"""
+ DESCRIBE EKLENECEK
+ BAĞIMSIZ DEĞİŞKEN KORELASYON EKLENECEK
+ PAIRPLOT EKLENEBİLİR
+"""
