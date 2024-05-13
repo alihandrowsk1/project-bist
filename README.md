@@ -19,9 +19,8 @@ Tahminlenmek istenilen hisseyi **veri_seti** dosyasında mevcut hisse değeri il
 
 ## Katkıda Bulunma
 
-```markdown
-Lütfen katkıda bulunmadan önce mevcut açık konuları (issues) kontrol edin. Ayrıca, yeni bir özelliği geliştirmek için önceden tartışma başlatmanızı öneririm.
-```
+Proje geliştirme sürecine katkıda bulunmak isterseniz, lütfen [CONTRIBUTING.md](CONTRIBUTING.md) dosyasını inceleyin. Bu dosya, projeye katkı sağlamak isteyenler için rehberlik sağlar ve nasıl katkıda bulunacakları hakkında detaylı bilgi içerir. Projeye katkıda bulunmadan önce mevcut açık konuları (issues) kontrol etmeyi ve yeni bir özelliği geliştirmek için önceden tartışma başlatmayı öneririm.
+
 
 ## Lisans
 
