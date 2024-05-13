@@ -7,6 +7,7 @@ import warnings
 import pandas as pd
 import evds as e
 from datetime import datetime, timedelta
+from APIKEY import key
 
 warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
@@ -18,7 +19,6 @@ pd.set_option('display.width', 500)
 ###########################################################
 
 # EVDS API ANAHTARI #
-key = "R0tm8EWAmS"
 evds = e.evdsAPI(key)
 
 
