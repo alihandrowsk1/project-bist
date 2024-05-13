@@ -20,6 +20,12 @@ pd.set_option('display.width', 500)
 
 # EVDS API ANAHTARI #
 evds = e.evdsAPI(key)
+"""
+Burdaki "key" argümanı evds web sitesinden alınan ve evds küpühanesine 
+bağlanmak için kişiye özel tanımlanmış bir anahtardır.
+
+(EVDS SİSTEMİ ÜZERİNDEN BİR HESAP OLUŞTURULDUKTAN SONRA HESABIN API KEY'İ İLE ERİŞİM SAĞLANABİLİR.)
+"""
 
 
 # KUR SEPETİ VERİSİ #
