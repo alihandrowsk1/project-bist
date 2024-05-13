@@ -7,7 +7,7 @@ import warnings
 import pandas as pd
 import evds as e
 from datetime import datetime, timedelta
-from APIKEY import key
+from APIKEYS import key
 
 warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
