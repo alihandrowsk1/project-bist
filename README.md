@@ -25,7 +25,8 @@ Lütfen katkıda bulunmadan önce mevcut açık konuları (issues) kontrol edin.
 
 ## Lisans
 
-Bu projede henüz bir lisanslama yoktur.
+Bu proje, MIT Lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakabilirsiniz.
+
 
 ## İletişim
 
