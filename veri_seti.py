@@ -24,7 +24,10 @@ evds = e.evdsAPI(key)
 Burdaki "key" argümanı evds web sitesinden alınan ve evds küpühanesine 
 bağlanmak için kişiye özel tanımlanmış bir anahtardır.
 
-(EVDS SİSTEMİ ÜZERİNDEN BİR HESAP OLUŞTURULDUKTAN SONRA HESABIN API KEY'İ İLE ERİŞİM SAĞLANABİLİR.)
+(EVDS SİSTEMİ ÜZERİNDEN BİR HESAP OLUŞTURUP HESABIN API KEY'İ İLE BU
+ÇALIŞMANIN DOSYA DİZİNİNDE APIKEYS.py ADLI DOSYA OLUŞTURUP ALINAN KEY,
+DOSYANIN İÇİNDE TANIMLANDIKTAN SONRA HERHANGİ BİR AYAR DEĞİŞTİRMEDEN
+SORUNSUZ ÇALIŞTIRILABİLİR.)
 """
 
 
