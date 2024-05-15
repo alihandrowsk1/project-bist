@@ -92,7 +92,7 @@ repo.rename(columns={"TP_AOFOBAP": "REPO"}, inplace=True)
 
 # YABANCI, YERLİ TAKAS VERİSİ #
 
-takas = pd.read_excel("ALL_INVESTOR.xlsx", index_col="TARIH")
+takas = pd.read_excel("takas_verisi.xlsx", index_col="TARIH")
 
 daily_takas = takas.resample('D').asfreq()
 daily_takas = daily_takas[:-1]
