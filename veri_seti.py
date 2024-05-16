@@ -129,6 +129,11 @@ for i in range(1, 8):
     df_clean[("LAGS", yeni_sutun)] = df_clean[("KCHOL.IS", "Close")].shift(i)
 
 
+# SINGLE INDEX DÖNÜŞÜMÜ #
+
+df_clean.columns = df_clean.columns.map('_'.join)
+
+
 ###########################################################
 # KEŞİFÇİ VERİ ANALİZİ #
 ###########################################################
