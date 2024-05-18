@@ -28,14 +28,14 @@ pd.set_option('display.width', 500)
 # MODEL İÇİN VERİ SETİNİ UYGUN HALE GETİRME #
 
 def dataf_for_prophet(dataframe, stock_code):
-    dependent = f"{stock_code}_Close"
+    dependent = f"{stock_code}.IS_Close"
     dataframe["ds"] = dataframe.index
     dataframe["y"] = dataframe[dependent]
     dataframe.drop([dependent], axis=1, inplace=True)
     return dataframe
 
 
-df = dataf_for_prophet(df, "KCHOL.IS")
+df = dataf_for_prophet(df, "KCHOL")
 
 
 # EN İYİ ÇAPRAZ DOĞRULAMA DEĞERLERİNİ BULMA #
