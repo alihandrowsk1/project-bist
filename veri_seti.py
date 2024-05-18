@@ -2,9 +2,12 @@
 # IMPORT'LAR VE BAZI AYARLAR #
 ###########################################################
 
-import yfinance as yf
 import warnings
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import yfinance as yf
 import evds as e
 from datetime import datetime, timedelta
 from APIKEYS import key
@@ -138,8 +141,26 @@ df_clean.columns = df_clean.columns.map('_'.join)
 # KEŞİFÇİ VERİ ANALİZİ #
 ###########################################################
 
-"""
- DESCRIBE EKLENECEK
- BAĞIMSIZ DEĞİŞKEN KORELASYON EKLENECEK
- PAIRPLOT EKLENEBİLİR
-"""
+# BETİMLEYİCİ İSTATİSTİKLER #
+
+df_clean.describe().T
+
+
+# DEĞİŞKENLERİN KORELASYONLARI #
+
+df_corr = df_clean.corr()
+
+plt.figure(figsize=(50, 50))
+sns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+plt.title("Değişkenler Arasındaki Korelasyon Matrisi")
+plt.show()
+
+# YÜKSEK KORELASYONU OLAN DEİŞKENLERİN GÖRSELİ #
+
+trashold = 0.75
+high_corr = df_corr[(df_corr > trashold) | (df_corr < -trashold)]
+
+plt.figure(figsize=(50, 50))
+sns.heatmap(high_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+plt.title("Değişkenler Arasındaki Yüksek Korelasyonlar\n(Eşik Değeri = ±{})".format(trashold))
+plt.show()
