@@ -13,7 +13,7 @@ from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error
 import numpy as np
 from hyperopt import hp, fmin, tpe, Trials
-import veri_seti as vs
+from veri_seti import df_clean as df
 
 warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
@@ -25,17 +25,17 @@ pd.set_option('display.width', 500)
 # MODELLEME #
 ###########################################################
 
+# MODEL İÇİN VERİ SETİNİ UYGUN HALE GETİRME #
 
-def dataf_for_prophet(dataframe, y):
+def dataf_for_prophet(dataframe, stock_code):
+    dependent = f"{stock_code}_Close"
     dataframe["ds"] = dataframe.index
-    dataframe["y"] = dataframe[y]
-    dataframe.drop([y], axis=1, inplace=True)
-    dataframe.columns = dataframe.columns.map('_'.join)
-    dataframe.rename(columns={"y_": "y", "ds_": "ds"}, inplace=True)
+    dataframe["y"] = dataframe[dependent]
+    dataframe.drop([dependent], axis=1, inplace=True)
     return dataframe
 
 
-df = dataf_for_prophet(vs.df_clean, ("KCHOL.IS", "Close"))
+df = dataf_for_prophet(df, "KCHOL.IS")
 
 
 # EN İYİ ÇAPRAZ DOĞRULAMA DEĞERLERİNİ BULMA #
