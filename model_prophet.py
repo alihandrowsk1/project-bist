@@ -14,6 +14,7 @@ from sklearn.metrics import mean_squared_error
 import numpy as np
 from hyperopt import hp, fmin, tpe, Trials
 from veri_seti import df_clean as df
+from veri_seti import dependent as dp
 
 warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
@@ -35,7 +36,7 @@ def dataf_for_prophet(dataframe, stock_code):
     return dataframe
 
 
-df = dataf_for_prophet(df, "KCHOL")
+df = dataf_for_prophet(df, dp)
 
 
 # EN İYİ ÇAPRAZ DOĞRULAMA DEĞERLERİNİ BULMA #

@@ -105,7 +105,8 @@ daily_takas.columns = pd.MultiIndex.from_tuples([('TAKAS', col) for col in daily
 
 # HİSSE, BİST100 VB. BORSA VERİLERİ #
 
-stocks = ["KCHOL.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
+dependent = input("TAHMİNLENECEK HİSSE SENEDİ'NİN KODU NEDİR?").upper()
+stocks = [f"{dependent}.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
 
 data = yf.download(stocks, start="2018-01-01", end="2024-01-01", group_by="ticker")
 
@@ -129,7 +130,7 @@ df_clean.fillna(method="bfill", inplace=True)
 
 for i in range(1, 8):
     yeni_sutun = f"LAG_{i}"
-    df_clean[("LAGS", yeni_sutun)] = df_clean[("KCHOL.IS", "Close")].shift(i)
+    df_clean[("LAGS", yeni_sutun)] = df_clean[(f"{dependent}.IS", "Close")].shift(i)
 
 
 # SINGLE INDEX DÖNÜŞÜMÜ #
