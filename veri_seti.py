@@ -149,9 +149,10 @@ df_clean.describe().T
 # DEĞİŞKENLERİN KORELASYONLARI #
 
 df_corr = df_clean.corr()
+mask = np.triu(np.ones_like(df_corr, dtype=bool))
 
 plt.figure(figsize=(50, 50))
-sns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+sns.heatmap(df_corr, mask=mask, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
 plt.title("Değişkenler Arasındaki Korelasyon Matrisi")
 plt.show()
 
@@ -161,6 +162,6 @@ trashold = 0.75
 high_corr = df_corr[(df_corr > trashold) | (df_corr < -trashold)]
 
 plt.figure(figsize=(50, 50))
-sns.heatmap(high_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+sns.heatmap(high_corr, annot=True, mask=mask, cmap='coolwarm', fmt=".2f", linewidths=.5)
 plt.title("Değişkenler Arasındaki Yüksek Korelasyonlar\n(Eşik Değeri = ±{})".format(trashold))
 plt.show()
