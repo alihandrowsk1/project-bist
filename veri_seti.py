@@ -33,7 +33,6 @@ DOSYANIN İÇİNDE TANIMLANDIKTAN SONRA HERHANGİ BİR AYAR DEĞİŞTİRMEDEN
 SORUNSUZ ÇALIŞTIRILABİLİR)
 """
 
-
 # KUR SEPETİ VERİSİ #
 
 exc = evds.get_data(["TP.DK.USD.S.YTL", "TP.DK.EUR.S.YTL"],
@@ -42,7 +41,6 @@ exc = evds.get_data(["TP.DK.USD.S.YTL", "TP.DK.EUR.S.YTL"],
                     frequency=1, aggregation_types="last")
 
 exc["KUR_SEPETİ"] = (exc["TP_DK_USD_S_YTL"] / 2) + (exc["TP_DK_EUR_S_YTL"] / 2)
-
 
 # ENFLASYON VERİSİ #
 
@@ -66,7 +64,6 @@ for index, row in enf.iterrows():
         daily_data.append({"Tarih": date, "TUFE": daily_tufe})
     daily_enf = pd.concat([daily_enf, pd.DataFrame(daily_data)])
 
-
 """
 AŞAĞIDAKİ BLOK REPO YENİDEN TARİHLEME İŞLEMİ İÇİN KULLANILIYOR.
 """
@@ -74,7 +71,6 @@ daily_enf["Tarih"] = pd.to_datetime(daily_enf["Tarih"], format="%Y-%m-%d")
 
 min_tarih = daily_enf["Tarih"].min()
 max_tarih = daily_enf["Tarih"].max()
-
 
 # REPO VERİSİ #
 
@@ -92,7 +88,6 @@ repo = pd.merge(tam_df, rep0, on="Tarih", how='left')
 
 repo.rename(columns={"TP_AOFOBAP": "REPO"}, inplace=True)
 
-
 # YABANCI, YERLİ TAKAS VERİSİ #
 
 takas = pd.read_excel("takas_verisi.xlsx", index_col="TARIH")
@@ -109,8 +104,11 @@ daily_takas.columns = pd.MultiIndex.from_tuples([('TAKAS', col) for col in daily
 
 def indir_ve_return_et(n):
     data_sets = []
+    stock_codes = []
+
     for i in range(n):
         y_stock = input(f"{i + 1}.TAHMİNLENECEK HİSSE SENEDİ'NİN KODU NEDİR?").upper()
+        stock_codes.append(y_stock)
         stocks = [f"{y_stock}.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
 
         print(f"{i + 1}. Veri seti indiriliyor...")
@@ -126,20 +124,19 @@ def indir_ve_return_et(n):
         df_clean.fillna(method="ffill", inplace=True)
         df_clean.fillna(method="bfill", inplace=True)
 
-
         for i in range(1, 8):
             yeni_sutun = f"LAG_{i}"
             df_clean[("LAGS", yeni_sutun)] = df_clean[(f"{y_stock}.IS", "Close")].shift(i)
 
-
         df_clean.columns = df_clean.columns.map('_'.join)
 
         data_sets.append(df_clean)
-        print("Veri seti indirildi")
+        print("VERİLER İNDİRİLDİ.")
 
-    return data_sets
+    dfs = {stock_codes[0]: data_sets[0], stock_codes[1]: data_sets[1], stock_codes[2]: data_sets[2],
+           stock_codes[3]: data_sets[3], stock_codes[4]: data_sets[4]}
+
+    return dfs, data_sets, stock_codes
 
 
-n = int(input("KAÇ ADET HİSSE SENEDİ TAHMİNLENECEK?"))
-
-all_dfs = indir_ve_return_et(n)
+dfs, data_sets, stock_codes = indir_ve_return_et(5)
