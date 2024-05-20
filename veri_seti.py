@@ -103,66 +103,43 @@ daily_takas = daily_takas.interpolate(method='linear')
 daily_takas.columns = pd.MultiIndex.from_tuples([('TAKAS', col) for col in daily_takas.columns])
 
 
-# HİSSE, BİST100 VB. BORSA VERİLERİ #
-
-dependent = input("TAHMİNLENECEK HİSSE SENEDİ'NİN KODU NEDİR?").upper()
-stocks = [f"{dependent}.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
-
-data = yf.download(stocks, start="2018-01-01", end="2024-01-01", group_by="ticker")
-
-
 ###########################################################
-# VERİ SETİNİN BİRLEŞTİRİLMESİ VE DÜZENLENMESİ #
+# VERİ SETLERİNİN BİRLEŞTİRİLMESİ VE DÜZENLENMESİ #
 ###########################################################
 
-data[("OTHER_VALUES", "EXCHANGE_BASKET")] = exc["KUR_SEPETİ"].values
-data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
-data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
-data = pd.concat([data, daily_takas], axis=1)
+def indir_ve_return_et(n):
+    data_sets = []
+    for i in range(n):
+        y_stock = input(f"{i + 1}.TAHMİNLENECEK HİSSE SENEDİ'NİN KODU NEDİR?").upper()
+        stocks = [f"{y_stock}.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
 
-df_clean = data.dropna(subset=[("XU100.IS", "Close")])
+        print(f"{i + 1}. Veri seti indiriliyor...")
+        data = yf.download(stocks, start="2018-01-01", end="2024-01-01", group_by="ticker")
 
-df_clean.fillna(method="ffill", inplace=True)
-df_clean.fillna(method="bfill", inplace=True)
+        data[("OTHER_VALUES", "EXCHANGE_BASKET")] = exc["KUR_SEPETİ"].values
+        data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
+        data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
+        data = pd.concat([data, daily_takas], axis=1)
 
+        df_clean = data.dropna(subset=[("XU100.IS", "Close")])
 
-# BAĞIMLI DEĞİŞKENİN GECİKMELİ DEĞERLERİ #
-
-for i in range(1, 8):
-    yeni_sutun = f"LAG_{i}"
-    df_clean[("LAGS", yeni_sutun)] = df_clean[(f"{dependent}.IS", "Close")].shift(i)
-
-
-# SINGLE INDEX DÖNÜŞÜMÜ #
-
-df_clean.columns = df_clean.columns.map('_'.join)
+        df_clean.fillna(method="ffill", inplace=True)
+        df_clean.fillna(method="bfill", inplace=True)
 
 
-###########################################################
-# KEŞİFÇİ VERİ ANALİZİ #
-###########################################################
-
-# BETİMLEYİCİ İSTATİSTİKLER #
-
-df_clean.describe().T
+        for i in range(1, 8):
+            yeni_sutun = f"LAG_{i}"
+            df_clean[("LAGS", yeni_sutun)] = df_clean[(f"{y_stock}.IS", "Close")].shift(i)
 
 
-# DEĞİŞKENLERİN KORELASYONLARI #
+        df_clean.columns = df_clean.columns.map('_'.join)
 
-df_corr = df_clean.corr()
-mask = np.triu(np.ones_like(df_corr, dtype=bool))
+        data_sets.append(df_clean)
+        print("Veri seti indirildi")
 
-plt.figure(figsize=(50, 50))
-sns.heatmap(df_corr, mask=mask, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
-plt.title("Değişkenler Arasındaki Korelasyon Matrisi")
-plt.show()
+    return data_sets
 
-# YÜKSEK KORELASYONU OLAN DEİŞKENLERİN GÖRSELİ #
 
-trashold = 0.75
-high_corr = df_corr[(df_corr > trashold) | (df_corr < -trashold)]
+n = int(input("KAÇ ADET HİSSE SENEDİ TAHMİNLENECEK?"))
 
-plt.figure(figsize=(50, 50))
-sns.heatmap(high_corr, annot=True, mask=mask, cmap='coolwarm', fmt=".2f", linewidths=.5)
-plt.title("Değişkenler Arasındaki Yüksek Korelasyonlar\n(Eşik Değeri = ±{})".format(trashold))
-plt.show()
+all_dfs = indir_ve_return_et(n)
