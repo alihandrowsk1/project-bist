@@ -7,7 +7,6 @@ import pandas as pd
 from prophet import Prophet
 from prophet.diagnostics import cross_validation
 from prophet.diagnostics import performance_metrics
-import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error
@@ -42,7 +41,7 @@ def dataf_for_prophet(dataframes, stock_codes):
 
 
 df = dataf_for_prophet(data_sets, stock_codes)
-first_df = df[0]    # optimizasyon için kullanılacak
+first_df = df[0]  # optimizasyon için kullanılacak
 
 
 ###########################################################
@@ -74,7 +73,7 @@ trials0 = Trials()
 last_iph = fmin(objective0, hyper_iph, algo=tpe.suggest, max_evals=10, trials=trials0)
 
 best_iph = {
-    'initial': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days',][last_iph['initial']],
+    'initial': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days', ][last_iph['initial']],
     'period': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days'][last_iph['period']],
     'horizon': ['45 days', '90 days', '180 days', '365 days', '730 days'][last_iph['horizon']]
 }
@@ -99,78 +98,77 @@ hyperparam_space = {
     'holidays_prior_scale': hp.uniform('holidays_prior_scale', 0.01, 10.0),
     'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])}
 
-
 trials1 = Trials()
 best = fmin(objective1, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials1)
 best["seasonality_mode"] = "additive"
 
 print(best)
 
-
 ###########################################################
 # EN İYİ MODEL İLE TAHMİNLEME #
 ###########################################################
-def last_model(dataframes):
+periods = int(input("KAÇ GÜN TAHMİNLEMEK İSTİYORSUNUZ?"))
+
+
+def last_model(dataframes, periods):
     all_predicts = []
     for dataf in dataframes:
-        model = Prophet()
+        model = Prophet(**best)
         model.fit(dataf)
-        future = model.make_future_dataframe(periods=90)
+        future = model.make_future_dataframe(periods=periods)
         predicts = model.predict(future)
         all_predicts.append(predicts)
     return all_predicts
 
 
-predictions = last_model(df)
+predictions = last_model(df, periods)
 
 # SKORLAMA #
-def align_dataframes(df, predictions):
-    aligned_df = []
-    aligned_predictions = []
+def calculate_scores(df_list, predictions):
+    rmse_scores = []
+    r2_scores = []
 
-    for i in range(len(df)):
-        min_len = min(len(df[i]), len(predictions[i]))
-        aligned_df.append(df[i][:min_len])
-        aligned_predictions.append(predictions[i][:min_len])
+    for i, (df, preds) in enumerate(zip(df_list, predictions)):
+        min_len = min(len(df), len(preds))
+        y_true = df['y'].values[:min_len]
+        y_pred = preds['yhat'].values[:min_len]
 
-    return aligned_df, aligned_predictions
+        mse = mean_squared_error(y_true, y_pred)
+        rmse = np.sqrt(mse)
+
+        r2 = r2_score(y_true, y_pred)
+
+        rmse_scores.append(rmse)
+        r2_scores.append(r2)
+
+        print(f"Model {i + 1} için RMSE: {rmse}")
+        print(f"Model {i + 1} için R^2: {r2}")
+
+    return rmse_scores, r2_scores
 
 
-aligned_df, aligned_predictions = align_dataframes(df, predictions)
-
-# Skorları hesapla
-scores = calculate_score(aligned_df, aligned_predictions)
-
-# Her bir model için skorları yazdır
-for i, score in enumerate(scores):
-    print(f"Model {i+1} için MSE: {score}")
+rmse_scores, r2_scores = calculate_scores(df, predictions)
 
 
 ###########################################################
 # GÖRSELLEŞTİRME #
 ###########################################################
 
-for i in range(len(df)):
-    # Yeni bir grafik oluştur
-    plt.figure(figsize=(10, 6))
+def visualize_predictions(df_list, stock_codes, predictions):
+    for i, (dataf, stock_code, preds) in enumerate(zip(df_list, stock_codes, predictions)):
+        plt.figure(figsize=(10, 6))
+        plt.plot(dataf['ds'], dataf['y'], label="Gerçek Veriler", color="blue")
+        plt.plot(preds['ds'], preds['yhat'], label="Tahminler", color="red")
+        plt.fill_between(preds['ds'], preds['yhat_lower'], preds['yhat_upper'], color="pink", alpha=0.5)
+        plt.xlabel("Tarih")
+        plt.ylabel("Değer")
+        plt.title(f"{stock_code} için Gerçek Veriler ve Tahminler")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
-    # Gerçek verileri çiz
-    plt.plot(df[i].index, df[i]["y"], label="Gerçek Veriler", color="blue")
 
-    # Tahminleri çiz
-    plt.plot(predictions[i].index, predictions[i]["yhat"], label="Tahminler", color="red")
-    plt.fill_between(predictions[i].index, predictions[i]["yhat_lower"], predictions[i]["yhat_upper"], color="pink",
-                     alpha=0.5)
-
-    # Grafik özellikleri
-    plt.xlabel("Tarih")
-    plt.ylabel("Değer")
-    plt.title(f"Veri Seti {i + 1} için Gerçek Veriler ve Tahminler")
-    plt.legend()
-    plt.grid(True)
-
-    # Grafikleri göster
-    plt.show()
+visualize_predictions(df, stock_codes, predictions)
 
 
 ###########################################################
@@ -178,12 +176,8 @@ for i in range(len(df)):
 ###########################################################
 
 def main():
-    print("Bütün işlemler başarılı şekilde gerçekleştirildi.")
+    print("BÜTÜN İŞLEMLER BAŞARIYLA GERÇEKLEŞTİRİLDİ.")
+
 
 if __name__ == '__main__':
     main()
-
-
-"""
-MODELLEME YAPARKEN SAÇMA TAHMİNLİYOR VERİ_SETİ'NDEN GELİŞ BİÇİMİNDE PROBLEM OLABİLİR.
-"""
