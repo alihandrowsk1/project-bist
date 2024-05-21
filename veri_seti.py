@@ -132,14 +132,3 @@ for i in range(1, 8):
 # SINGLE INDEX DÖNÜŞÜMÜ #
 
 df_clean.columns = df_clean.columns.map('_'.join)
-
-
-###########################################################
-# KEŞİFÇİ VERİ ANALİZİ #
-###########################################################
-
-"""
- DESCRIBE EKLENECEK
- BAĞIMSIZ DEĞİŞKEN KORELASYON EKLENECEK
- PAIRPLOT EKLENEBİLİR
-"""
