@@ -7,121 +7,138 @@ import pandas as pd
 from prophet import Prophet
 from prophet.diagnostics import cross_validation
 from prophet.diagnostics import performance_metrics
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_squared_error
 import numpy as np
 from hyperopt import hp, fmin, tpe, Trials
-from veri_seti import dfs, data_sets, stock_codes
+from veri_seti import data_sets, stock_codes
 
 warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', 500)
 
-
 ###########################################################
 # MODELLEME #
 ###########################################################
+original_df = data_sets.copy()
 
-# MODEL İÇİN VERİ SETİNİ UYGUN HALE GETİRME #
 
-def dataf_for_prophet(dataframes, stock_codes):
+def prepare_data_for_prophet(dataframes, stock_codes):
+    # Veri setlerini Prophet formatına uygun hale getirir
     processed_dataframes = []
+    scalers = []
 
-    for df_ds, stock_code in zip(dataframes, stock_codes):
+    for df, stock_code in zip(dataframes, stock_codes):
         ys = f"{stock_code}.IS_Close"
-        df_ds = df_ds.copy()
-        df_ds["ds"] = df_ds.index
-        df_ds["y"] = df_ds[ys]
-        df_ds.drop([ys], axis=1, inplace=True)
-        processed_dataframes.append(df_ds)
+        y_df = df[[ys]]  # "y" değişkeni için ayrı DataFrame
+        X_df = df.drop([ys], axis=1)
 
-    return processed_dataframes
+        # "y" değişkeni için ölçeklendirme işlemi
+        y_scaler = StandardScaler()
+        y_scaled = y_scaler.fit_transform(y_df)
+        y_df_scaled = pd.DataFrame(y_scaled, columns=[ys], index=y_df.index)
+
+        # Diğer değişkenler için ölçeklendirme işlemi
+        X_scaler = StandardScaler()
+        X_scaled = X_scaler.fit_transform(X_df)
+        X_df_scaled = pd.DataFrame(X_scaled, columns=X_df.columns, index=X_df.index)
+
+        # 'ds' ve 'y' sütunlarını ekleyen fonksiyonun çağrılması
+        X_df_scaled['ds'] = X_df_scaled.index
+        X_df_scaled['y'] = y_df_scaled.values
+
+        # DataFrame'i birleştirme
+        processed_dataframes.append(X_df_scaled)
+        scalers.append((y_scaler, X_scaler))
+
+    return processed_dataframes, scalers, y_scaler, X_scaler
 
 
-df = dataf_for_prophet(data_sets, stock_codes)
-first_df = df[0]  # optimizasyon için kullanılacak
+df, scalers, y_scaler, X_scaler = prepare_data_for_prophet(data_sets, stock_codes)
+
+
+df_hyper = df[0]  # optimizasyon için kullanılacak
 
 
 ###########################################################
 # OPTİMAL HİPERPARAMETRE AYARLARI #
 ###########################################################
 
-def objective0(params):
+def objective_initial_period_horizon(params):
     initial = params['initial']
     period = params['period']
     horizon = params['horizon']
 
-    model0 = Prophet()
-    model0.fit(first_df)
-    df_cv0 = cross_validation(model0, initial=initial, period=period, horizon=horizon)
-    df_p0 = performance_metrics(df_cv0)
-    return -df_p0['rmse'].values[0]  # Çapraz doğrulama performansını maksimize et
+    model = Prophet()
+    model.fit(df_hyper)
+    df_cv = cross_validation(model, initial=initial, period=period, horizon=horizon)
+    df_performance = performance_metrics(df_cv)
+    return df_performance['rmse'].values[0]  # Çapraz doğrulama performansını maksimize ediyor
 
 
 hyper_iph = {
-    'initial': hp.choice('initial', ["45 days", '90 days', '180 days',
-                                     '365 days', '730 days', '1095 days']),
-    'period': hp.choice('period', ['45 days', '90 days', '180 days',
-                                   '365 days', '730 days', '1095 days']),
-    'horizon': hp.choice('horizon', ['45 days', '90 days',
-                                     '180 days', '365 days', '730 days'])
+    'initial': hp.choice('initial', ["45 days", '90 days', '180 days', '365 days', '730 days', '1095 days']),
+    'period': hp.choice('period', ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days']),
+    'horizon': hp.choice('horizon', ['45 days', '90 days', '180 days', '365 days', '730 days'])
 }
 
-trials0 = Trials()
-last_iph = fmin(objective0, hyper_iph, algo=tpe.suggest, max_evals=10, trials=trials0)
+trials_iph = Trials()
+best_iph = fmin(objective_initial_period_horizon, hyper_iph, algo=tpe.suggest, max_evals=10, trials=trials_iph)
 
 best_iph = {
-    'initial': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days', ][last_iph['initial']],
-    'period': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days'][last_iph['period']],
-    'horizon': ['45 days', '90 days', '180 days', '365 days', '730 days'][last_iph['horizon']]
+    'initial': ["45 days", '90 days', '180 days', '365 days', '730 days', '1095 days'][best_iph['initial']],
+    'period': ['45 days', '90 days', '180 days', '365 days', '730 days', '1095 days'][best_iph['period']],
+    'horizon': ['45 days', '90 days', '180 days', '365 days', '730 days'][best_iph['horizon']]
 }
 
 print(best_iph)
 
 
-# HİPERPARAMETRE OPTİMİZASYONU #
-
-def objective1(params):
-    model1 = Prophet(**params)
-    model1.fit(first_df)  # Modeli eğitelim
-    df_cv1 = cross_validation(model1, initial=best_iph["initial"], period=best_iph["period"],
-                              horizon=best_iph["horizon"])
-    df_p1 = performance_metrics(df_cv1)
-    return -df_p1['rmse'].values[0]
-
+def objective_model_params(params):
+    model = Prophet(**params)
+    model.fit(df_hyper)
+    df_cv = cross_validation(model, initial=best_iph["initial"], period=best_iph["period"], horizon=best_iph["horizon"])
+    df_performance = performance_metrics(df_cv)
+    return df_performance['rmse'].values[0]
 
 hyperparam_space = {
     'changepoint_prior_scale': hp.uniform('changepoint_prior_scale', 0.001, 0.5),
     'seasonality_prior_scale': hp.uniform('seasonality_prior_scale', 0.01, 10.0),
     'holidays_prior_scale': hp.uniform('holidays_prior_scale', 0.01, 10.0),
-    'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])}
+    'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])
+}
 
-trials1 = Trials()
-best = fmin(objective1, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials1)
-best["seasonality_mode"] = "additive"
+trials_model = Trials()
+best_params = fmin(objective_model_params, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials_model)
+best_params["seasonality_mode"] = ["additive", "multiplicative"][best_params["seasonality_mode"]]
 
-print(best)
+print(best_params)
+
 
 ###########################################################
 # EN İYİ MODEL İLE TAHMİNLEME #
 ###########################################################
-periods = int(input("KAÇ GÜN TAHMİNLEMEK İSTİYORSUNUZ?"))
 
+while True:
+    try:
+        periods = int(input("KAÇ GÜN TAHMİNLEMEK İSTİYORSUNUZ? "))
+        break
+    except ValueError:
+        print("Lütfen geçerli bir sayı girin.")
 
-def last_model(dataframes, periods):
-    all_predicts = []
-    for dataf in dataframes:
-        model = Prophet(**best)
-        model.fit(dataf)
+def predict_with_best_model(dataframes, periods):
+    all_predictions = []
+    for df in dataframes:
+        model = Prophet(**best_params)
+        model.fit(df)
         future = model.make_future_dataframe(periods=periods)
-        predicts = model.predict(future)
-        all_predicts.append(predicts)
-    return all_predicts
+        predictions = model.predict(future)
+        all_predictions.append(predictions)
+    return all_predictions
 
-
-predictions = last_model(df, periods)
+predictions = predict_with_best_model(df, periods)
 
 # SKORLAMA #
 def calculate_scores(df_list, predictions):
@@ -135,7 +152,6 @@ def calculate_scores(df_list, predictions):
 
         mse = mean_squared_error(y_true, y_pred)
         rmse = np.sqrt(mse)
-
         r2 = r2_score(y_true, y_pred)
 
         rmse_scores.append(rmse)
@@ -148,6 +164,87 @@ def calculate_scores(df_list, predictions):
 
 
 rmse_scores, r2_scores = calculate_scores(df, predictions)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ÖLÇEKLENMİŞ VERİ SETİNİ VE TAHMİNLENEN DEĞERLERİ ORİJİNAL HALİNE DÖNDÜRME
+
+"""
+HENÜZ DENEME AŞAMASINDA, KULLANIMA KAPALI
+"""
+
+def inverse_transform_predictions(all_predictions, scaler):
+    inverted_predictions = []
+    for predictions in all_predictions:
+        # Get the predicted values
+        predicted_values = predictions['yhat'].values.reshape(-1, 1)
+        # Inverse transform the predicted values
+        inverted_values = scaler.inverse_transform(predicted_values)
+        # Update the 'yhat' column in the DataFrame with inverted values
+        predictions['yhat'] = inverted_values.flatten()
+        inverted_predictions.append(predictions)
+    return inverted_predictions
+
+
+def inverse_transform_predictions(all_predictions, scaler):
+    inverted_predictions = []
+    for predictions in all_predictions:
+        # Identify columns that should not be transformed
+        non_transform_columns = ['ds']
+        # Separate the columns to be transformed and those that should not be transformed
+        columns_to_transform = [col for col in predictions.columns if col not in non_transform_columns]
+
+        # Apply inverse transform to the selected columns
+        transformed_values = scaler.inverse_transform(predictions[columns_to_transform])
+
+        # Create a new DataFrame for transformed values and add non-transformed columns back
+        transformed_df = pd.DataFrame(transformed_values, columns=columns_to_transform)
+        for col in non_transform_columns:
+            transformed_df[col] = predictions[col].values
+
+        # Reorder the columns to match the original DataFrame
+        transformed_df = transformed_df[predictions.columns]
+
+        inverted_predictions.append(transformed_df)
+    return inverted_predictions
+
+
+def inverse_transform_predictions(all_predictions, scaler):
+    inverted_predictions = []
+    for predictions in all_predictions:
+        # Extract the predicted values
+        predicted_values = predictions[['yhat', 'yhat_lower', 'yhat_upper']].values
+        # Inverse transform the predicted values
+        inverted_values = scaler.inverse_transform(predicted_values)
+        # Update the DataFrame columns with the inverted values
+        predictions[['yhat', 'yhat_lower', 'yhat_upper']] = inverted_values
+        inverted_predictions.append(predictions)
+    return inverted_predictions
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ###########################################################
@@ -166,7 +263,6 @@ def visualize_predictions(df_list, stock_codes, predictions):
         plt.legend()
         plt.grid(True)
         plt.show()
-
 
 visualize_predictions(df, stock_codes, predictions)
 
