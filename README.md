@@ -7,15 +7,15 @@ Bu proje, Borsa Istanbul'daki hisse senetlerinin fiyatlarını tahminlemek için
 
 ## Nasıl Çalışır?
 
-1. **Veri Toplama:** Proje, Borsa Istanbul'dan hisse senedi verilerini toplamak için API'ler veya web scraping yöntemlerini kullanabilir.
+1. **Veri Toplama:** Proje, Borsa Istanbul'dan hisse senedi verilerini toplamak için API'lar kullanır.
 2. **Veri Ön İşleme:** Elde edilen veriler, eksik değerlerin doldurulması, özellik mühendisliği ve ölçeklendirme gibi ön işleme adımlarından geçirilir.
-3. **Modelleme:** Ön işlenmiş veriler, çeşitli makine öğrenimi algoritmalarıyla eğitilir. Bu adımda, regresyon veya zaman serisi tahminleme gibi teknikler kullanılabilir.
+3. **Modelleme:** Ön işlenmiş veriler, prophet makine öğrenimi algoritmasıyla eğitilir. Bu adımda, zaman serisi tahminleme tekniği kullanılır.
 4. **Değerlendirme:** Eğitilen modelin performansı, uygun değerlendirme metrikleri kullanılarak değerlendirilir.
 5. **Tahminler:** Model, gelecekteki hisse senedi fiyatlarını tahminlemek için kullanılabilir. Tahminler, kullanıcıya sunulabilir veya başka bir uygulamada kullanılabilir.
 
 ## Kullanım
 
-Tahminlenmek istenilen hisseyi **veri_seti** dosyasında mevcut hisse değeri ile değiştirilip bir sonraki aşamada **model_prophet** dosyasında kullanılabilir.
+Repo'yu indirip istemci ile (cmd, powershell) dosya konumundan **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırıp tahminlenmek istenilen hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyebilirsiniz. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
 
 ## Katkıda Bulunma
 
