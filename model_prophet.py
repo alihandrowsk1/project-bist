@@ -89,10 +89,10 @@ hyperparam_space = {
     'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])
 }
 
+
 trials_model = Trials()
 best_params = fmin(objective_model_params, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials_model)
 best_params["seasonality_mode"] = ["additive", "multiplicative"][best_params["seasonality_mode"]]
-
 print(best_params)
 
 
@@ -111,7 +111,14 @@ while True:
 def predict_with_best_model(dataframes, periods):
     all_predictions = []
     for df in dataframes:
-        model = Prophet(**best_params)
+        model = Prophet(
+            yearly_seasonality=True,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            changepoint_prior_scale=best_params['changepoint_prior_scale'],
+            seasonality_prior_scale=best_params['seasonality_prior_scale'],
+            holidays_prior_scale=best_params['holidays_prior_scale'],
+            seasonality_mode=best_params['seasonality_mode'])
         model.fit(df)
         future = model.make_future_dataframe(periods=periods)
         predictions = model.predict(future)
@@ -184,10 +191,10 @@ predictions_nonscale = inverse_transform_predictions(predictions, y_scalers)
 
 def visualize_predictions(df_list, stock_codes, predictions):
     for i, (dataf, stock_code, preds) in enumerate(zip(df_list, stock_codes, predictions)):
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(14, 8))
         plt.plot(dataf.index, dataf[f"{stock_code}.IS_Close"], label="Gerçek Veriler", color="blue")
         plt.plot(preds['ds'], preds['yhat'], label="Tahminler", color="red")
-        plt.fill_between(preds['ds'], preds['yhat_lower'], preds['yhat_upper'], color="pink", alpha=0.5)
+        plt.fill_between(preds['ds'], preds['yhat_lower'], preds['yhat_upper'], color="pink", alpha=0.3)
         plt.xlabel("Tarih")
         plt.ylabel("Fiyat")
         plt.title(f"{stock_code} için Gerçek Veriler ve Tahminler")
