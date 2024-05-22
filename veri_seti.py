@@ -130,6 +130,7 @@ def indir_ve_return_et(n):
 
         df_clean.columns = df_clean.columns.map('_'.join)
 
+
         data_sets.append(df_clean)
         print("VERİLER İNDİRİLDİ.")
 
