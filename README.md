@@ -15,7 +15,7 @@ Bu proje, Borsa Istanbul'daki hisse senetlerinin fiyatlarını tahminlemek için
 
 ## Kullanım
 
-Repo'yu indirip istemci ile (cmd, powershell) dosya konumundan **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırıp tahminlenmek istenilen hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyebilirsiniz. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
+Repo'yu indirip istemci ile (cmd, powershell) dosya konumundan **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırıp tahminlemek istenilen hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyebilirsiniz. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
 
 ## Katkıda Bulunma
 
