@@ -1,9 +1,11 @@
 
 # Project-BIST
 
+
 ## Proje Hakkında
 
 Bu proje, Borsa Istanbul'daki hisse senetlerinin fiyatlarını tahminlemek için kullanılan bir makine öğrenimi modelini içerir. Proje, çeşitli özellikler ve veri analizi teknikleri kullanarak gelecekteki fiyat değişikliklerini tahminlemek için tasarlanmıştır.
+
 
 ## Nasıl Çalışır?
 
@@ -13,9 +15,14 @@ Bu proje, Borsa Istanbul'daki hisse senetlerinin fiyatlarını tahminlemek için
 4. **Değerlendirme:** Eğitilen modelin performansı, uygun değerlendirme metrikleri kullanılarak değerlendirilir.
 5. **Tahminler:** Model, gelecekteki hisse senedi fiyatlarını tahminlemek için kullanılabilir. Tahminler, kullanıcıya sunulabilir veya başka bir uygulamada kullanılabilir.
 
+
 ## Kullanım
 
-Repo'yu indirip istemci ile (cmd, powershell) dosya konumundan **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırıp tahminlemek istenilen hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyebilirsiniz. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
+1. Repoyu indirin ve zip formatından çıkartın.
+2. İndirdiğiniz dosyanın içine **APIKEYS.py** dosyası açın ve içine EVDS sisteminden alacağınız API Key'i key olarak bir değişkene yazın. (örn; key="sizin key'iniz")
+3. İstemci ile (cmd, powershell vb.) indirdiğiniz dosyanın konumuna gidin ve **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırın.
+4. Tahminlemek istediğiniz hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyin. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
+
 
 ## Katkıda Bulunma
 
