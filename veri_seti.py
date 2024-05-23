@@ -5,8 +5,6 @@
 import warnings
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import yfinance as yf
 import evds as e
 from datetime import datetime, timedelta
@@ -110,7 +108,7 @@ def indir_ve_return_et(n):
     stock_codes = []
 
     for i in range(n):
-        y_stock = input(f"{i + 1}.TAHMİNLENECEK HİSSE SENEDİ'NİN KODU NEDİR?").upper()
+        y_stock = input(f"{i + 1}. TAHMİNLENECEK HİSSE SENEDİ'NİN KODU NEDİR?").upper()
         stock_codes.append(y_stock)
         stocks = [f"{y_stock}.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
 
@@ -121,24 +119,37 @@ def indir_ve_return_et(n):
         data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
         data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
         data = pd.concat([data, daily_takas], axis=1)
-
-        df_clean = data.dropna(subset=[("XU100.IS", "Close")])
-
+        df_clean = data.dropna(subset=[(f"{y_stock}.IS", "Close")])
         df_clean.fillna(method="ffill", inplace=True)
         df_clean.fillna(method="bfill", inplace=True)
 
-        for i in range(1, 8):
-            yeni_sutun = f"LAG_{i}"
-            df_clean[("LAGS", yeni_sutun)] = df_clean[(f"{y_stock}.IS", "Close")].shift(i)
+        # LAG sütunlarının eklenmesi
+        for j in range(1, 15):
+            yeni_sutun = f"LAG_{j}"
+            df_clean[("LAGS", yeni_sutun)] = df_clean[(f"{y_stock}.IS", "Close")].shift(j)
 
+        # RSI hesaplaması ve eklenmesi
+        window = 14
+        close_prices = df_clean[(f"{y_stock}.IS", "Close")]
+        delta = close_prices.diff()
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+
+        avg_gain = gain.rolling(window=window).mean()
+        avg_loss = loss.rolling(window=window).mean()
+
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+
+        df_clean[("INDICATORS", "RSI")] = rsi
+
+        # Kolon isimlerini düzelt
         df_clean.columns = df_clean.columns.map('_'.join)
-
 
         data_sets.append(df_clean)
         print("VERİLER İNDİRİLDİ.")
 
-    dfs = {stock_codes[0]: data_sets[0], stock_codes[1]: data_sets[1], stock_codes[2]: data_sets[2],
-           stock_codes[3]: data_sets[3], stock_codes[4]: data_sets[4]}
+    dfs = {stock_codes[i]: data_sets[i] for i in range(n)}
 
     return dfs, data_sets, stock_codes
 
