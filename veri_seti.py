@@ -33,11 +33,13 @@ DOSYANIN İÇİNDE TANIMLANDIKTAN SONRA HERHANGİ BİR AYAR DEĞİŞTİRMEDEN
 SORUNSUZ ÇALIŞTIRILABİLİR)
 """
 
+print("MODEL BAŞLATILIYOR...")
+
 # KUR SEPETİ VERİSİ #
 
 exc = evds.get_data(["TP.DK.USD.S.YTL", "TP.DK.EUR.S.YTL"],
                     startdate="01-01-2018",
-                    enddate="31-12-2023",
+                    enddate="31-03-2024",
                     frequency=1, aggregation_types="last")
 
 exc["KUR_SEPETİ"] = (exc["TP_DK_USD_S_YTL"] / 2) + (exc["TP_DK_EUR_S_YTL"] / 2)
@@ -46,7 +48,7 @@ exc["KUR_SEPETİ"] = (exc["TP_DK_USD_S_YTL"] / 2) + (exc["TP_DK_EUR_S_YTL"] / 2)
 
 enf = evds.get_data(["TP.FG.J0", "TP.TUFE1YI.T1"],
                     startdate="01-01-2018",
-                    enddate="31-12-2023",
+                    enddate="31-03-2024",
                     frequency=1)
 
 enf.rename(columns={"TP_FG_J0": "TUFE", "TP_TUFE1YI_T1": "UFE"}, inplace=True)
@@ -76,7 +78,7 @@ max_tarih = daily_enf["Tarih"].max()
 
 rep0 = evds.get_data(["TP.AOFOBAP"],
                      startdate="01-01-2018",
-                     enddate="31-12-2023",
+                     enddate="31-03-2024",
                      frequency=1)
 
 rep0["Tarih"] = pd.to_datetime(rep0["Tarih"], format='%d-%m-%Y')
@@ -96,6 +98,7 @@ daily_takas = takas.resample('D').asfreq()
 daily_takas = daily_takas[:-1]
 daily_takas = daily_takas.interpolate(method='linear')
 daily_takas.columns = pd.MultiIndex.from_tuples([('TAKAS', col) for col in daily_takas.columns])
+daily_takas = daily_takas[: -30]
 
 
 ###########################################################
@@ -112,7 +115,7 @@ def indir_ve_return_et(n):
         stocks = [f"{y_stock}.IS", "XU100.IS", "BZ=F", "GC=F", "BTC-USD"]
 
         print(f"{i + 1}. Veri seti indiriliyor...")
-        data = yf.download(stocks, start="2018-01-01", end="2024-01-01", group_by="ticker")
+        data = yf.download(stocks, start="2018-01-01", end="2024-04-01", group_by="ticker")
 
         data[("OTHER_VALUES", "EXCHANGE_BASKET")] = exc["KUR_SEPETİ"].values
         data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values

@@ -77,7 +77,7 @@ df_hyper = df[0]  # optimizasyon için kullanılacak df
 def objective_model_params(params):
     model = Prophet(**params)
     model.fit(df_hyper)
-    df_cv = cross_validation(model, initial="730 days", period="180 days", horizon="365 days")
+    df_cv = cross_validation(model, initial="730 days", period="365 days", horizon="365 days")
     df_performance = performance_metrics(df_cv)
     return df_performance['rmse'].values[0]
 
@@ -89,10 +89,10 @@ hyperparam_space = {
     'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])
 }
 
-
 trials_model = Trials()
 best_params = fmin(objective_model_params, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials_model)
-best_params["seasonality_mode"] = ["additive", "multiplicative"][best_params["seasonality_mode"]]
+best_params["seasonality_mode"] = "additive"
+
 print(best_params)
 
 
@@ -195,6 +195,15 @@ def visualize_predictions(df_list, stock_codes, predictions):
         plt.plot(dataf.index, dataf[f"{stock_code}.IS_Close"], label="Gerçek Veriler", color="blue")
         plt.plot(preds['ds'], preds['yhat'], label="Tahminler", color="red")
         plt.fill_between(preds['ds'], preds['yhat_lower'], preds['yhat_upper'], color="pink", alpha=0.3)
+
+        # Son değeri belirle ve metin olarak ekler
+        last_real_value = dataf[f"{stock_code}.IS_Close"].iloc[-1]
+        last_pred_value = preds['yhat'].iloc[-1]
+        plt.text(dataf.index[-1], last_real_value, f"{last_real_value:.2f}",
+                 verticalalignment='bottom', horizontalalignment='right', color='blue')
+        plt.text(preds['ds'].iloc[-1], last_pred_value, f"{last_pred_value:.2f}",
+                 verticalalignment='bottom', horizontalalignment='right', color='red')
+
         plt.xlabel("Tarih")
         plt.ylabel("Fiyat")
         plt.title(f"{stock_code} için Gerçek Veriler ve Tahminler")
