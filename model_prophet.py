@@ -67,35 +67,6 @@ array_scaler = sca[:, 0]
 y_scalers = list(array_scaler)
 
 
-df_hyper = df[0]  # optimizasyon için kullanılacak df
-
-
-###########################################################
-# OPTİMAL HİPERPARAMETRE AYARLARI #
-###########################################################
-
-def objective_model_params(params):
-    model = Prophet(**params)
-    model.fit(df_hyper)
-    df_cv = cross_validation(model, initial="730 days", period="365 days", horizon="365 days")
-    df_performance = performance_metrics(df_cv)
-    return df_performance['rmse'].values[0]
-
-
-hyperparam_space = {
-    'changepoint_prior_scale': hp.uniform('changepoint_prior_scale', 0.001, 0.5),
-    'seasonality_prior_scale': hp.uniform('seasonality_prior_scale', 0.01, 10.0),
-    'holidays_prior_scale': hp.uniform('holidays_prior_scale', 0.01, 10.0),
-    'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])
-}
-
-trials_model = Trials()
-best_params = fmin(objective_model_params, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials_model)
-best_params["seasonality_mode"] = "additive"
-
-print(best_params)
-
-
 ###########################################################
 # EN İYİ MODEL İLE TAHMİNLEME #
 ###########################################################
@@ -113,12 +84,8 @@ def predict_with_best_model(dataframes, periods):
     for df in dataframes:
         model = Prophet(
             yearly_seasonality=True,
-            weekly_seasonality=False,
-            daily_seasonality=False,
-            changepoint_prior_scale=best_params['changepoint_prior_scale'],
-            seasonality_prior_scale=best_params['seasonality_prior_scale'],
-            holidays_prior_scale=best_params['holidays_prior_scale'],
-            seasonality_mode=best_params['seasonality_mode'])
+            weekly_seasonality=True,
+            daily_seasonality=True,)
         model.fit(df)
         future = model.make_future_dataframe(periods=periods)
         predictions = model.predict(future)

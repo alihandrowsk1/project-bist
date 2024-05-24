@@ -99,6 +99,17 @@ daily_takas.columns = pd.MultiIndex.from_tuples([('TAKAS', col) for col in daily
 daily_takas = daily_takas[: -30]
 
 
+# SEÇİM AYLARI #
+
+date_range = pd.date_range(start='2018-01-01', end='2024-03-31', freq='D')
+elections = pd.DataFrame(index=date_range)
+elections['election_days'] = 0
+elections.loc['2018-05-01':'2018-08-01', 'election_days'] = 1
+elections.loc['2019-03-01':'2019-06-01', 'election_days'] = 1
+elections.loc['2023-04-01':'2023-07-01', 'election_days'] = 1
+elections.loc['2024-02-01':'2024-05-01', 'election_days'] = 1
+
+
 ###########################################################
 # VERİ SETLERİNİN BİRLEŞTİRİLMESİ VE DÜZENLENMESİ #
 ###########################################################
@@ -151,6 +162,7 @@ def indir_ve_return_et(n):
         data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
         data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
         data = pd.concat([data, daily_takas], axis=1)
+        data = pd.concat([data, elections], axis=1)
 
         # Verileri temizleme
         df_clean = data.dropna(subset=[(f"{y_stock}.IS", "Close")])
