@@ -115,10 +115,44 @@ def indir_ve_return_et(n):
         print(f"{i + 1}. Veri seti indiriliyor...")
         data = yf.download(stocks, start="2018-01-01", end="2024-04-01", group_by="ticker")
 
+        # Sadece belirli kolonları seçelim
+        selected_columns = [
+            (f"{y_stock}.IS", "Open"),
+            (f"{y_stock}.IS", "High"),
+            (f"{y_stock}.IS", "Low"),
+            (f"{y_stock}.IS", "Close"),
+            (f"{y_stock}.IS", "Volume"),
+            ("XU100.IS", "Open"),
+            ("XU100.IS", "High"),
+            ("XU100.IS", "Low"),
+            ("XU100.IS", "Close"),
+            ("XU100.IS", "Volume"),
+            ("BZ=F", "Open"),
+            ("BZ=F", "High"),
+            ("BZ=F", "Low"),
+            ("BZ=F", "Close"),
+            ("BZ=F", "Volume"),
+            ("GC=F", "Open"),
+            ("GC=F", "High"),
+            ("GC=F", "Low"),
+            ("GC=F", "Close"),
+            ("GC=F", "Volume"),
+            ("BTC-USD", "Open"),
+            ("BTC-USD", "High"),
+            ("BTC-USD", "Low"),
+            ("BTC-USD", "Close"),
+            ("BTC-USD", "Volume")
+        ]
+
+        data = data[selected_columns]
+
+        # Ek veri setlerinin eklenmesi
         data[("OTHER_VALUES", "EXCHANGE_BASKET")] = exc["KUR_SEPETİ"].values
         data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
         data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
         data = pd.concat([data, daily_takas], axis=1)
+
+        # Verileri temizleme
         df_clean = data.dropna(subset=[(f"{y_stock}.IS", "Close")])
         df_clean.fillna(method="ffill", inplace=True)
         df_clean.fillna(method="bfill", inplace=True)
@@ -143,8 +177,8 @@ def indir_ve_return_et(n):
 
         df_clean[("INDICATORS", "RSI")] = rsi
 
-        # Kolon isimlerini düzelt
-        df_clean.columns = df_clean.columns.map('_'.join)
+        # Kolon isimlerini düzeltme
+        df_clean.columns = ['_'.join(col) for col in df_clean.columns]
 
         data_sets.append(df_clean)
         print("VERİLER İNDİRİLDİ.")
