@@ -30,11 +30,16 @@ def prepare_data_for_prophet(dataframes, stock_codes):
     # Veri setlerini Prophet formatına uygun hale getirir
     processed_dataframes = []
     scalers = []
+    original_ys = []
 
     for df, stock_code in zip(dataframes, stock_codes):
         ys = f"{stock_code}.IS_Close"
         y_df = df[[ys]]  # "y" değişkeni için ayrı DataFrame
         X_df = df.drop([ys], axis=1)
+
+        # Orijinal hisse değerleri "y" kolonunda
+        original_y = pd.DataFrame(df[ys].values, columns=["y"], index=df.index)
+        original_ys.append(original_y)
 
         # "y" değişkeni için ölçeklendirme işlemi
         y_scaler = StandardScaler()
@@ -54,10 +59,10 @@ def prepare_data_for_prophet(dataframes, stock_codes):
         processed_dataframes.append(X_df_scaled)
         scalers.append((y_scaler, X_scaler))
 
-    return processed_dataframes, scalers
+    return processed_dataframes, scalers, original_ys
 
 
-df, scalers = prepare_data_for_prophet(data_sets, stock_codes)
+df, scalers, original_ys = prepare_data_for_prophet(data_sets, stock_codes)
 
 original_df = data_sets.copy()  # ölçeklenmemiş veri seti
 
@@ -70,16 +75,16 @@ y_scalers = list(array_scaler)
 ###########################################################
 # EN İYİ MODEL İLE TAHMİNLEME #
 ###########################################################
-
+"""
 while True:
     try:
         periods = int(input("KAÇ GÜN TAHMİNLEMEK İSTİYORSUNUZ? "))
         break
     except ValueError:
         print("Lütfen geçerli bir sayı girin.")
+"""
 
-
-def predict_with_best_model(dataframes, periods):
+def predict_with_best_model(dataframes):
     all_predictions = []
     for df in dataframes:
         model = Prophet(
@@ -87,44 +92,16 @@ def predict_with_best_model(dataframes, periods):
             weekly_seasonality=True,
             daily_seasonality=True,)
         model.fit(df)
-        future = model.make_future_dataframe(periods=periods)
+        future = model.make_future_dataframe(periods=36)
         predictions = model.predict(future)
         all_predictions.append(predictions)
     return all_predictions
 
 
-predictions = predict_with_best_model(df, periods)
-
-
-# SKORLAMA #
-
-def calculate_scores(df_list, predictions):
-    rmse_scores = []
-    r2_scores = []
-
-    for i, (df, preds) in enumerate(zip(df_list, predictions)):
-        min_len = min(len(df), len(preds))
-        y_true = df['y'].values[:min_len]
-        y_pred = preds['yhat'].values[:min_len]
-
-        mse = mean_squared_error(y_true, y_pred)
-        rmse = np.sqrt(mse)
-        r2 = r2_score(y_true, y_pred)
-
-        rmse_scores.append(rmse)
-        r2_scores.append(r2)
-
-        print(f"Model {i + 1} için RMSE: {rmse}")
-        print(f"Model {i + 1} için R^2: {r2}")
-
-    return rmse_scores, r2_scores
-
-
-rmse_scores, r2_scores = calculate_scores(df, predictions)
+predictions = predict_with_best_model(df)
 
 
 # ÖLÇEKLENMİŞ TAHMİNLENEN DEĞERLERİ ORİJİNAL HALİNE DÖNDÜRME
-
 
 def inverse_transform_predictions(all_predictions, scalers):
     inverted_predictions = []
@@ -152,9 +129,44 @@ def inverse_transform_predictions(all_predictions, scalers):
 predictions_nonscale = inverse_transform_predictions(predictions, y_scalers)
 
 
+# SKORLAMA #
+
+def calculate_scores(df_list, predictions):
+    rmse_scores = []
+    r2_scores = []
+
+    for i, (df, preds) in enumerate(zip(df_list, predictions)):
+        min_len = min(len(df), len(preds))
+        y_true = df['y'].values[:min_len]
+        y_pred = preds['yhat'].values[:min_len]
+
+        mse = mean_squared_error(y_true, y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_true, y_pred)
+
+        rmse_scores.append(rmse)
+        r2_scores.append(r2)
+
+        print(f"Model {i + 1} için RMSE: {rmse}")
+        print(f"Model {i + 1} için R^2: {r2}")
+
+    return rmse_scores, r2_scores
+
+
+rmse_scores, r2_scores = calculate_scores(original_ys, predictions_nonscale)
+
+
 ###########################################################
 # GÖRSELLEŞTİRME #
 ###########################################################
+from datetime import timedelta
+
+for df in predictions_nonscale:
+    if "ds" in df.columns:
+        df["ds"] = df["ds"] - timedelta(days=9)
+    else:
+        print(f"ds adında bir sütun {df} veri çerçevesinde bulunamadı.")
+
 
 def visualize_predictions(df_list, stock_codes, predictions):
     for i, (dataf, stock_code, preds) in enumerate(zip(df_list, stock_codes, predictions)):
