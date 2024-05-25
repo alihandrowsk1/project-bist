@@ -10,6 +10,7 @@ from prophet.diagnostics import performance_metrics
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+from datetime import timedelta
 import numpy as np
 from hyperopt import hp, fmin, tpe, Trials
 from veri_seti import data_sets, stock_codes
@@ -84,22 +85,39 @@ while True:
         print("Lütfen geçerli bir sayı girin.")
 """
 
-def predict_with_best_model(dataframes):
+def predict_with_best_model(dataframes, periods):
     all_predictions = []
     for df in dataframes:
+        # NaN değerlerini içeren satırları kaldır
+        df = df.dropna()
+
         model = Prophet(
             yearly_seasonality=True,
-            weekly_seasonality=True,
-            daily_seasonality=True,)
+            weekly_seasonality=False,
+            daily_seasonality=False
+        )
+
+        # df'in kolonlarını dolaş ve 'ds' ve 'y' dışındaki kolonları regresör olarak ekle
+        for column in df.columns:
+            if column not in ['ds', 'y']:
+                model.add_regressor(column)
+
         model.fit(df)
-        future = model.make_future_dataframe(periods=36)
+        future = model.make_future_dataframe(periods=periods)
+
+        # Gelecek veri çerçevesine tüm regresörleri ekle
+        # Mevcut regresör sütunlarını ileriye doğru doldur
+        for column in df.columns:
+            if column not in ['ds', 'y']:
+                # Gelecek veri çerçevesinin uzunluğuna kadar doldur
+                future[column] = pd.concat([df[column], pd.Series([np.nan] * periods)], ignore_index=True).ffill()
+
         predictions = model.predict(future)
         all_predictions.append(predictions)
     return all_predictions
 
 
-predictions = predict_with_best_model(df)
-
+predictions = predict_with_best_model(df, 80)
 
 # ÖLÇEKLENMİŞ TAHMİNLENEN DEĞERLERİ ORİJİNAL HALİNE DÖNDÜRME
 
@@ -159,11 +177,11 @@ rmse_scores, r2_scores = calculate_scores(original_ys, predictions_nonscale)
 ###########################################################
 # GÖRSELLEŞTİRME #
 ###########################################################
-from datetime import timedelta
+
 
 for df in predictions_nonscale:
     if "ds" in df.columns:
-        df["ds"] = df["ds"] - timedelta(days=9)
+        df["ds"] = df["ds"] - timedelta(days=21)
     else:
         print(f"ds adında bir sütun {df} veri çerçevesinde bulunamadı.")
 
