@@ -162,7 +162,7 @@ def indir_ve_return_et(n):
         data[("OTHER_VALUES", "TUFE")] = daily_enf["TUFE"].values
         data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
         # data = pd.concat([data, daily_takas], axis=1)
-        data.replace(0, method='ffill', inplace=True)
+        data.replace(0, method='bfill', inplace=True)
         data = pd.concat([data, elections], axis=1)
 
         # Verileri temizleme

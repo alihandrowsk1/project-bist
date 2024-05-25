@@ -46,7 +46,7 @@ plt.show()
 
 # YDATA ANALİZ #
 
-# profile = ProfileReport(first_df, title="istatistikler")
+# profile = ProfileReport(first_df, title="İSTATİSTİKLER")
 
 # profile.to_file("statistics.html")
 
