@@ -168,7 +168,7 @@ def indir_ve_return_et(n):
         data[("OTHER_VALUES", "REPO")] = repo["REPO"].values
         # data = pd.concat([data, daily_takas], axis=1)
         data.replace(0, method='bfill', inplace=True)
-        data = pd.concat([data, elections], axis=1)
+        # data = pd.concat([data, elections], axis=1)
 
         # Verileri temizleme
         df_clean = data.dropna(subset=[(f"{y_stock}.IS", "Close")])
