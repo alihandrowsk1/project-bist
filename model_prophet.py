@@ -5,13 +5,10 @@
 import warnings
 import pandas as pd
 from prophet import Prophet
-from prophet.diagnostics import cross_validation
-from prophet.diagnostics import performance_metrics
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import numpy as np
-from hyperopt import hp, fmin, tpe, Trials
 from veri_seti import data_sets, stock_codes
 
 
@@ -30,11 +27,16 @@ def prepare_data_for_prophet(dataframes, stock_codes):
     # Veri setlerini Prophet formatına uygun hale getirir
     processed_dataframes = []
     scalers = []
+    original_ys = []
 
     for df, stock_code in zip(dataframes, stock_codes):
         ys = f"{stock_code}.IS_Close"
         y_df = df[[ys]]  # "y" değişkeni için ayrı DataFrame
         X_df = df.drop([ys], axis=1)
+
+        # Orijinal hisse değerleri "y" kolonunda
+        original_y = pd.DataFrame(df[ys].values, columns=["y"], index=df.index)
+        original_ys.append(original_y)
 
         # "y" değişkeni için ölçeklendirme işlemi
         y_scaler = StandardScaler()
@@ -54,10 +56,10 @@ def prepare_data_for_prophet(dataframes, stock_codes):
         processed_dataframes.append(X_df_scaled)
         scalers.append((y_scaler, X_scaler))
 
-    return processed_dataframes, scalers
+    return processed_dataframes, scalers, original_ys
 
 
-df, scalers = prepare_data_for_prophet(data_sets, stock_codes)
+df, scalers, original_ys = prepare_data_for_prophet(data_sets, stock_codes)
 
 original_df = data_sets.copy()  # ölçeklenmemiş veri seti
 
@@ -65,35 +67,6 @@ original_df = data_sets.copy()  # ölçeklenmemiş veri seti
 sca = np.array(scalers)
 array_scaler = sca[:, 0]
 y_scalers = list(array_scaler)
-
-
-df_hyper = df[0]  # optimizasyon için kullanılacak df
-
-
-###########################################################
-# OPTİMAL HİPERPARAMETRE AYARLARI #
-###########################################################
-
-def objective_model_params(params):
-    model = Prophet(**params)
-    model.fit(df_hyper)
-    df_cv = cross_validation(model, initial="730 days", period="180 days", horizon="365 days")
-    df_performance = performance_metrics(df_cv)
-    return df_performance['rmse'].values[0]
-
-
-hyperparam_space = {
-    'changepoint_prior_scale': hp.uniform('changepoint_prior_scale', 0.001, 0.5),
-    'seasonality_prior_scale': hp.uniform('seasonality_prior_scale', 0.01, 10.0),
-    'holidays_prior_scale': hp.uniform('holidays_prior_scale', 0.01, 10.0),
-    'seasonality_mode': hp.choice('seasonality_mode', ['additive', 'multiplicative'])
-}
-
-trials_model = Trials()
-best_params = fmin(objective_model_params, hyperparam_space, algo=tpe.suggest, max_evals=10, trials=trials_model)
-best_params["seasonality_mode"] = ["additive", "multiplicative"][best_params["seasonality_mode"]]
-
-print(best_params)
 
 
 ###########################################################
@@ -111,9 +84,30 @@ while True:
 def predict_with_best_model(dataframes, periods):
     all_predictions = []
     for df in dataframes:
-        model = Prophet(**best_params)
+        # NaN değerlerini içeren satırları kaldır
+        df = df.dropna()
+
+        model = Prophet(
+            yearly_seasonality=True,
+            weekly_seasonality=False,
+            daily_seasonality=False
+        )
+
+        # df'in kolonlarını dolaş ve 'ds' ve 'y' dışındaki kolonları regresör olarak ekle
+        for column in df.columns:
+            if column not in ['ds', 'y']:
+                model.add_regressor(column)
+
         model.fit(df)
         future = model.make_future_dataframe(periods=periods)
+
+        # Gelecek veri çerçevesine tüm regresörleri ekle
+        # Mevcut regresör sütunlarını ileriye doğru doldur
+        for column in df.columns:
+            if column not in ['ds', 'y']:
+                # Gelecek veri çerçevesinin uzunluğuna kadar doldur
+                future[column] = pd.concat([df[column], pd.Series([np.nan] * periods)], ignore_index=True).ffill()
+
         predictions = model.predict(future)
         all_predictions.append(predictions)
     return all_predictions
@@ -121,36 +115,7 @@ def predict_with_best_model(dataframes, periods):
 
 predictions = predict_with_best_model(df, periods)
 
-
-# SKORLAMA #
-
-def calculate_scores(df_list, predictions):
-    rmse_scores = []
-    r2_scores = []
-
-    for i, (df, preds) in enumerate(zip(df_list, predictions)):
-        min_len = min(len(df), len(preds))
-        y_true = df['y'].values[:min_len]
-        y_pred = preds['yhat'].values[:min_len]
-
-        mse = mean_squared_error(y_true, y_pred)
-        rmse = np.sqrt(mse)
-        r2 = r2_score(y_true, y_pred)
-
-        rmse_scores.append(rmse)
-        r2_scores.append(r2)
-
-        print(f"Model {i + 1} için RMSE: {rmse}")
-        print(f"Model {i + 1} için R^2: {r2}")
-
-    return rmse_scores, r2_scores
-
-
-rmse_scores, r2_scores = calculate_scores(df, predictions)
-
-
 # ÖLÇEKLENMİŞ TAHMİNLENEN DEĞERLERİ ORİJİNAL HALİNE DÖNDÜRME
-
 
 def inverse_transform_predictions(all_predictions, scalers):
     inverted_predictions = []
@@ -178,16 +143,52 @@ def inverse_transform_predictions(all_predictions, scalers):
 predictions_nonscale = inverse_transform_predictions(predictions, y_scalers)
 
 
+# SKORLAMA #
+
+def calculate_scores(df_list, predictions):
+    rmse_scores = []
+    r2_scores = []
+
+    for i, (df, preds) in enumerate(zip(df_list, predictions)):
+        min_len = min(len(df), len(preds))
+        y_true = df['y'].values[:min_len]
+        y_pred = preds['yhat'].values[:min_len]
+
+        mse = mean_squared_error(y_true, y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_true, y_pred)
+
+        rmse_scores.append(rmse)
+        r2_scores.append(r2)
+
+        print(f"Model {i + 1} için RMSE: {rmse}")
+        print(f"Model {i + 1} için R^2: {r2}")
+
+    return rmse_scores, r2_scores
+
+
+rmse_scores, r2_scores = calculate_scores(original_ys, predictions_nonscale)
+
+
 ###########################################################
 # GÖRSELLEŞTİRME #
 ###########################################################
 
 def visualize_predictions(df_list, stock_codes, predictions):
     for i, (dataf, stock_code, preds) in enumerate(zip(df_list, stock_codes, predictions)):
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(14, 8))
         plt.plot(dataf.index, dataf[f"{stock_code}.IS_Close"], label="Gerçek Veriler", color="blue")
         plt.plot(preds['ds'], preds['yhat'], label="Tahminler", color="red")
-        plt.fill_between(preds['ds'], preds['yhat_lower'], preds['yhat_upper'], color="pink", alpha=0.5)
+        plt.fill_between(preds['ds'], preds['yhat_lower'], preds['yhat_upper'], color="pink", alpha=0.3)
+
+        # Son değeri belirle ve metin olarak ekler
+        last_real_value = dataf[f"{stock_code}.IS_Close"].iloc[-1]
+        last_pred_value = preds['yhat'].iloc[-1]
+        plt.text(dataf.index[-1], last_real_value, f"{last_real_value:.2f}",
+                 verticalalignment='bottom', horizontalalignment='right', color='blue')
+        plt.text(preds['ds'].iloc[-1], last_pred_value, f"{last_pred_value:.2f}",
+                 verticalalignment='bottom', horizontalalignment='right', color='red')
+
         plt.xlabel("Tarih")
         plt.ylabel("Fiyat")
         plt.title(f"{stock_code} için Gerçek Veriler ve Tahminler")

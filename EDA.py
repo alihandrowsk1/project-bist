@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from ydata_profiling import ProfileReport
 from veri_seti import data_sets as ds
 
 warnings.filterwarnings("ignore")
@@ -43,6 +44,11 @@ sns.heatmap(high_corr, annot=True, mask=mask, cmap='coolwarm', fmt=".2f", linewi
 plt.title("Değişkenler Arasındaki Yüksek Korelasyonlar\n(Eşik Değeri = ±{})".format(threshold))
 plt.show()
 
+# YDATA ANALİZ #
+
+# profile = ProfileReport(first_df, title="İSTATİSTİKLER")
+
+# profile.to_file("statistics.html")
 
 ###########################################################
 # EDA İÇİN PIPELINE #
