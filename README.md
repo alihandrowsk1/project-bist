@@ -1,21 +1,28 @@
 
 # Project-BIST
 
+
 ## Proje Hakkında
 
 Bu proje, Borsa Istanbul'daki hisse senetlerinin fiyatlarını tahminlemek için kullanılan bir makine öğrenimi modelini içerir. Proje, çeşitli özellikler ve veri analizi teknikleri kullanarak gelecekteki fiyat değişikliklerini tahminlemek için tasarlanmıştır.
 
+
 ## Nasıl Çalışır?
 
-1. **Veri Toplama:** Proje, Borsa Istanbul'dan hisse senedi verilerini toplamak için API'ler veya web scraping yöntemlerini kullanabilir.
+1. **Veri Toplama:** Proje, Borsa Istanbul'dan hisse senedi verilerini toplamak için API'lar kullanır.
 2. **Veri Ön İşleme:** Elde edilen veriler, eksik değerlerin doldurulması, özellik mühendisliği ve ölçeklendirme gibi ön işleme adımlarından geçirilir.
-3. **Modelleme:** Ön işlenmiş veriler, çeşitli makine öğrenimi algoritmalarıyla eğitilir. Bu adımda, regresyon veya zaman serisi tahminleme gibi teknikler kullanılabilir.
+3. **Modelleme:** Ön işlenmiş veriler, prophet makine öğrenimi algoritmasıyla eğitilir. Bu adımda, zaman serisi tahminleme tekniği kullanılır.
 4. **Değerlendirme:** Eğitilen modelin performansı, uygun değerlendirme metrikleri kullanılarak değerlendirilir.
 5. **Tahminler:** Model, gelecekteki hisse senedi fiyatlarını tahminlemek için kullanılabilir. Tahminler, kullanıcıya sunulabilir veya başka bir uygulamada kullanılabilir.
 
+
 ## Kullanım
 
-Tahminlenmek istenilen hisseyi **veri_seti** dosyasında mevcut hisse değeri ile değiştirilip bir sonraki aşamada **model_prophet** dosyasında kullanılabilir.
+1. Repoyu indirin ve zip formatından çıkartın.
+2. İndirdiğiniz dosyanın içine **APIKEYS.py** dosyası açın ve içine EVDS sisteminden alacağınız API Key'i key olarak bir değişkene yazın. (örn; key="sizin key'iniz")
+3. İstemci ile (cmd, powershell vb.) indirdiğiniz dosyanın konumuna gidin ve **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırın.
+4. Tahminlemek istediğiniz hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyin. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
+**(TAHMİNLENMEK İSTENİLEN HİSSE EN GEÇ 2017-12-30 TARİHİNDE HALKA ARZ OLMUŞ OLMALIDIR.)**
 
 ## Katkıda Bulunma
 
