@@ -5,14 +5,10 @@
 import warnings
 import pandas as pd
 from prophet import Prophet
-from prophet.diagnostics import cross_validation
-from prophet.diagnostics import performance_metrics
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
-from datetime import timedelta
 import numpy as np
-from hyperopt import hp, fmin, tpe, Trials
 from veri_seti import data_sets, stock_codes
 
 
@@ -76,14 +72,14 @@ y_scalers = list(array_scaler)
 ###########################################################
 # EN İYİ MODEL İLE TAHMİNLEME #
 ###########################################################
-"""
+
 while True:
     try:
         periods = int(input("KAÇ GÜN TAHMİNLEMEK İSTİYORSUNUZ? "))
         break
     except ValueError:
         print("Lütfen geçerli bir sayı girin.")
-"""
+
 
 def predict_with_best_model(dataframes, periods):
     all_predictions = []
@@ -117,7 +113,7 @@ def predict_with_best_model(dataframes, periods):
     return all_predictions
 
 
-predictions = predict_with_best_model(df, 80)
+predictions = predict_with_best_model(df, periods)
 
 # ÖLÇEKLENMİŞ TAHMİNLENEN DEĞERLERİ ORİJİNAL HALİNE DÖNDÜRME
 
@@ -177,14 +173,6 @@ rmse_scores, r2_scores = calculate_scores(original_ys, predictions_nonscale)
 ###########################################################
 # GÖRSELLEŞTİRME #
 ###########################################################
-
-
-for df in predictions_nonscale:
-    if "ds" in df.columns:
-        df["ds"] = df["ds"] - timedelta(days=21)
-    else:
-        print(f"ds adında bir sütun {df} veri çerçevesinde bulunamadı.")
-
 
 def visualize_predictions(df_list, stock_codes, predictions):
     for i, (dataf, stock_code, preds) in enumerate(zip(df_list, stock_codes, predictions)):
