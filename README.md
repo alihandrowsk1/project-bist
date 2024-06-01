@@ -18,11 +18,11 @@ Bu proje, Borsa Istanbul'daki hisse senetlerinin fiyatlarını tahminlemek için
 
 ## Kullanım
 
-1. Repoyu indirin ve zip formatından çıkartın.
-2. İndirdiğiniz dosyanın içine **APIKEYS.py** dosyası açın ve içine EVDS sisteminden alacağınız API Key'i key olarak bir değişkene yazın. (örn; key="sizin key'iniz")
-3. İstemci ile (cmd, powershell vb.) indirdiğiniz dosyanın konumuna gidin ve **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırın.
-4. Tahminlemek istediğiniz hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyin. (örn; GARAN : Garanti Bankası, SISE : Şişe ve Cam Fabrikaları, THYAO : Türk Hava Yolları) 
-**(TAHMİNLENMEK İSTENİLEN HİSSE EN GEÇ 2017-12-30 TARİHİNDE HALKA ARZ OLMUŞ OLMALIDIR.)**
+1. Repoyu **Releases** kısmından indirin.
+2. İndirdiğiniz dosyanın içine **APIKEYS.py** dosyası açın ve EVDS sisteminden alacağınız API Key'i **key** olarak bir değişkene string olarak yazın. (örn; key="sizin key'iniz")
+3. İstemci ile (cmd, powershell vb.) dosyanın konumuna gidin ve **model_prophet.py** isimli dosyayı python aracılığıyla çalıştırın. (python model_prophet.py veya python3 model_prophet.py)
+4. Tahminlemek istediğiniz hisseleri (tek seferde en fazla 5 adet) borsa koduna göre tahminleyip grafiklerini inceleyin. (örn; GARAN : Garanti Bankası, THYAO : Türk Hava Yolları vb.) 
+**(TAHMİNLENMEK İSTENİLEN HİSSE EN GEÇ 2017-12-30 TARİHİNDE HALKA ARZ OLMUŞ OLMASI DAHA İYİ SONUÇLAR VERECEKTİR.)**
 
 ## Katkıda Bulunma
 
